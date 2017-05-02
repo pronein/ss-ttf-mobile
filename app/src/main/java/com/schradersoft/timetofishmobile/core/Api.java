@@ -42,6 +42,14 @@ public class Api {
         return _instance;
     }
 
+    public Boolean IsSignedIn() {
+        return _jwt != null;
+    }
+
+    public void Signout() {
+        _jwt = null;
+    }
+
     public RequestQueue GetRequestQueue() {
         if (_requestQueue == null) {
             _requestQueue = Volley.newRequestQueue(_context.getApplicationContext());

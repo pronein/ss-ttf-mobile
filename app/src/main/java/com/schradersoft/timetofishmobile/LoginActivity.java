@@ -3,6 +3,7 @@ package com.schradersoft.timetofishmobile;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -154,8 +155,9 @@ public class LoginActivity extends AppCompatActivity implements IJsonResponseHan
     public void HandleResponse(JSONObject response) {
         showProgress(false);
 
-        //GsonBuilder gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss");//.registerTypeAdapter(User.class, deserializer);
-        //TODO: Transition to logged in (MainActivity)
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     @Override

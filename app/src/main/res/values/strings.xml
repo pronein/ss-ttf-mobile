@@ -8,4 +8,21 @@
     <string name="action_register">Register new account</string>
     <string name="error_incorrect_credentials">This username/password is incorrect</string>
     <string name="error_field_required">This field is required</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+
+    <string name="placeholder_email">john.doe@email.com</string>
+    <string name="placeholder_username">JD2000</string>
+
+    <string name="menu_item_trips">Trips</string>
+    <string name="menu_item_lists">Lists</string>
+    <string name="menu_item_contest">Contest</string>
+    <string name="menu_item_schedule">Schedule</string>
+    <string name="menu_item_fish_on">Fish On!</string>
+    <string name="menu_item_settings">Settings</string>
+    <string name="menu_item_signout">Sign Out</string>
+    <string name="menu_item_galleries">Galleries</string>
 </resources>
