@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:design="http://schemas.android.com/apk/res-auto">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_trips"
+            design:itemBackground="@android:color/darker_gray"
+            android:title="@string/menu_item_trips" />
+        <item
+            android:id="@+id/nav_galleries"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="@string/menu_item_galleries" />
+        <item
+            android:id="@+id/nav_contest"
+            android:title="@string/menu_item_contest" />
+        <item
+            android:id="@+id/nav_schedule"
+            android:title="@string/menu_item_schedule" />
+        <item
+            android:id="@+id/nav_lists"
+            android:title="@string/menu_item_lists" />
+        <item
+            android:id="@+id/nav_fish_on"
+            android:title="@string/menu_item_fish_on" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="@string/menu_item_settings" />
+        <item
+            android:id="@+id/nav_signout"
+            android:title="@string/menu_item_signout" />
+    </group>
+</menu>
