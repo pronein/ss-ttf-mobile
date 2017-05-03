@@ -84,6 +84,26 @@ public class LoginActivity extends AppCompatActivity implements IJsonResponseHan
         mProgressView = findViewById(R.id.login_progress);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        Bundle extras = getIntent().getExtras();
+
+        if (extras != null) {
+            String username = extras.getString("username");
+            String password = extras.getString("password");
+
+            if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password))
+                return;
+
+            mUsernameView.setText(username);
+            mPasswordView.setText(password);
+
+            attemptLogin();
+        }
+    }
+
     /**
      * Attempts to sign in or register the account specified by the login form.
      * If there are form errors (invalid email, missing fields, etc.), the

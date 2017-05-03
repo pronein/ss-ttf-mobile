@@ -1,6 +1,7 @@
 package com.schradersoft.timetofishmobile.core;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
@@ -13,6 +14,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,6 +71,18 @@ public class Api {
 
     public void Get(String uri, IJsonResponseHandler handler, Map<String, String> headers) {
         JsonObjectRequest req = BuildRequest(_rootUri + uri, Request.Method.GET, null, handler, headers);
+        _requestQueue.add(req);
+    }
+
+    public void Post(String uri, IJsonResponseHandler handler, Object payload) throws JSONException {
+        GsonBuilder gsonBuilder = new GsonBuilder()
+                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                .excludeFieldsWithoutExposeAnnotation();
+        Gson gson = gsonBuilder.create();
+
+        JSONObject jsonPayload = new JSONObject(gson.toJson(payload));
+
+        JsonObjectRequest req = BuildRequest(_rootUri + uri, Request.Method.POST, jsonPayload, handler, new HashMap<String, String>());
         _requestQueue.add(req);
     }
 
@@ -127,7 +142,7 @@ public class Api {
             @Override
             protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
                 String token = response.headers.get("x-ss-auth");
-                if (token.length() > 0)
+                if (!TextUtils.isEmpty(token) && token.length() > 0)
                     _jwt = token;
 
                 try{
