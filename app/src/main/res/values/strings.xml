@@ -23,6 +23,20 @@
     <string name="menu_item_schedule">Schedule</string>
     <string name="menu_item_fish_on">Fish On!</string>
     <string name="menu_item_settings">Settings</string>
-    <string name="menu_item_signout">Sign Out</string>
+    <string name="menu_item_sign_out">Sign Out</string>
     <string name="menu_item_galleries">Galleries</string>
+
+    <string name="register_form_register_user_btn">Register</string>
+    <string name="register_form_get_photo_btn">Get Photo</string>
+    <string name="register_form_confirm_password">Confirm Password</string>
+    <string name="register_form_password">Password</string>
+    <string name="register_form_email">Email</string>
+    <string name="register_form_username">Username</string>
+    <string name="register_form_last_name">Last Name</string>
+    <string name="register_form_middle_name">M.</string>
+    <string name="register_form_first_name">First Name</string>
+    <string name="register_form_avatar_preview">User avatar</string>
+    <string name="error_passwords_must_match">Passwords must match.</string>
+    <string name="error_username_unavailable">This username is already taken.</string>
+    <string name="title_activity_contest">Contest</string>
 </resources>

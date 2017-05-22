@@ -25,7 +25,7 @@ import org.json.JSONObject;
 /**
  * A login screen that offers login via username/password.
  */
-public class LoginActivity extends AppCompatActivity implements IJsonResponseHandler {
+public class LoginActivity extends AppCompatActivity implements IJsonResponseHandler<JSONObject> {
 
     // UI references.
     private EditText mUsernameView;
@@ -52,7 +52,7 @@ public class LoginActivity extends AppCompatActivity implements IJsonResponseHan
             }
         });
 
-        final LoginActivity appContext = this;
+        final LoginActivity loginActivity = this;
         Button mUsernameSigninButton = (Button) findViewById(R.id.sign_in_button);
         mUsernameSigninButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -74,12 +74,34 @@ public class LoginActivity extends AppCompatActivity implements IJsonResponseHan
         mRegisterButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO: Add transition to registration activity
+                Intent intent = new Intent(loginActivity, RegisterActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        Bundle extras = getIntent().getExtras();
+
+        if (extras != null) {
+            String username = extras.getString("username");
+            String password = extras.getString("password");
+
+            if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password))
+                return;
+
+            mUsernameView.setText(username);
+            mPasswordView.setText(password);
+
+            attemptLogin();
+        }
     }
 
     /**

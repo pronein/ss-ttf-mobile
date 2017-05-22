@@ -1,11 +1,10 @@
 package com.schradersoft.timetofishmobile;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -18,15 +17,20 @@ import android.widget.TextView;
 import com.android.volley.VolleyError;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.schradersoft.timetofishmobile.com.schradersoft.timetofishmobile.domain.models.User;
+import com.schradersoft.timetofishmobile.domain.models.Photo;
+import com.schradersoft.timetofishmobile.domain.models.User;
 import com.schradersoft.timetofishmobile.core.Api;
 import com.schradersoft.timetofishmobile.core.IJsonResponseHandler;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Hashtable;
+
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, IJsonResponseHandler {
+        implements NavigationView.OnNavigationItemSelectedListener, IJsonResponseHandler<JSONObject> {
 
     private User _user;
 
@@ -112,7 +116,9 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_trips) {
 
         } else if (id == R.id.nav_contest) {
-
+            ContestFragment fragment = new ContestFragment();
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.main_content, fragment).commit();
         } else if (id == R.id.nav_galleries) {
 
         } else if (id == R.id.nav_schedule) {
@@ -137,8 +143,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void HandleResponse(JSONObject response) {
-        GsonBuilder gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        Gson gson = gsonBuilder.create();
+        final GsonBuilder gsonBuilder = new GsonBuilder()
+                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                .excludeFieldsWithoutExposeAnnotation();
+        gsonBuilder.registerTypeAdapter(User.class, new User.UserDeserializer());
+        gsonBuilder.registerTypeAdapter(Photo.class, new Photo.PhotoDeserializer());
+        final Gson gson = gsonBuilder.create();
 
         try {
             _user = gson.fromJson(response.getString("user"), User.class);
@@ -154,11 +164,16 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void RefreshUserProfile(){
-        TextView username = (TextView)findViewById(R.id.profile_username);
-        TextView email = (TextView)findViewById(R.id.profile_email);
+    private void RefreshUserProfile() {
+        TextView username = (TextView) findViewById(R.id.profile_username);
+        TextView email = (TextView) findViewById(R.id.profile_email);
+        CircleImageView view = (CircleImageView) findViewById(R.id.profile_pic);
 
-        username.setText(_user.get_username());
-        email.setText(_user.get_email());
+        String url = _user.getAvatar().getImage().getUri();
+        Photo.PhotoDownloader imageLoader = new Photo.PhotoDownloader(url, view, getApplicationContext());
+        imageLoader.execute((Hashtable<String, Bitmap>)null);
+
+        username.setText(_user.getUsername());
+        email.setText(_user.getEmail());
     }
 }
