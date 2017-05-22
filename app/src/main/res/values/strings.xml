@@ -38,4 +38,5 @@
     <string name="register_form_avatar_preview">User avatar</string>
     <string name="error_passwords_must_match">Passwords must match.</string>
     <string name="error_username_unavailable">This username is already taken.</string>
+    <string name="title_activity_contest">Contest</string>
 </resources>

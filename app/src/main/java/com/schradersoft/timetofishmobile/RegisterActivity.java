@@ -3,6 +3,7 @@ package com.schradersoft.timetofishmobile;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,8 +21,8 @@ import android.widget.ProgressBar;
 import com.android.volley.VolleyError;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.schradersoft.timetofishmobile.com.schradersoft.timetofishmobile.domain.models.User;
+import com.schradersoft.timetofishmobile.domain.models.Photo;
+import com.schradersoft.timetofishmobile.domain.models.User;
 import com.schradersoft.timetofishmobile.core.Api;
 import com.schradersoft.timetofishmobile.core.IJsonResponseHandler;
 
@@ -31,8 +32,9 @@ import org.json.JSONObject;
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.Date;
 
-public class RegisterActivity extends AppCompatActivity implements IJsonResponseHandler {
+public class RegisterActivity extends AppCompatActivity {
 
     EditText _firstName;
     EditText _middleInitial;
@@ -126,8 +128,7 @@ public class RegisterActivity extends AppCompatActivity implements IJsonResponse
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
-            }
-            else if (requestCode == TAKE_PHOTO) {
+            } else if (requestCode == TAKE_PHOTO) {
                 Bundle extras = data.getExtras();
                 _avatarBitmap = (Bitmap) extras.get("data");
                 _avatarPreview.setBackground(null);
@@ -196,12 +197,98 @@ public class RegisterActivity extends AppCompatActivity implements IJsonResponse
         } else {
             showProgress(true);
 
-            User requestedUser = BuildUserFromForm();
+            final User requestedUser = BuildUserFromForm();
 
-            try {
-                Api.getInstance(this).Post("user", this, requestedUser);
-            } catch (JSONException e) {
-                e.printStackTrace();
+            final GsonBuilder gsonBuilder = new GsonBuilder()
+                    .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                    .excludeFieldsWithoutExposeAnnotation();
+            gsonBuilder.registerTypeAdapter(User.class, new User.UserDeserializer());
+            gsonBuilder.registerTypeAdapter(Photo.class, new Photo.PhotoDeserializer());
+            final Gson gson = gsonBuilder.create();
+
+            final Context context = this;
+            if (requestedUser.getAvatarImage() != null) {
+                Api.getInstance(context).BuildMultipartRequest("photo/upload", requestedUser.getAvatarImage(), new IJsonResponseHandler<JSONObject>() {
+                    @Override
+                    public void HandleResponse(JSONObject response) {
+                        Photo.Image image = gson.fromJson(response.toString(), Photo.Image.class);
+                        System.out.println("Woot!");
+
+                        Photo avatar = new Photo(image);
+                        avatar.setName("avatar-" + requestedUser.getUsername());
+                        avatar.setCaption("");
+                        avatar.setDate(new Date());
+
+                        try {
+                            Api.getInstance(context).Post("photo", new IJsonResponseHandler<JSONObject>() {
+                                @Override
+                                public void HandleResponse(JSONObject response) {
+                                    System.out.println("Nice!");
+                                    try {
+                                        String photoId = response.getString("id");
+                                        Api.getInstance(context).Get("photo/" + photoId, new IJsonResponseHandler<JSONObject>() {
+                                            @Override
+                                            public void HandleResponse(JSONObject response) {
+                                                try {
+                                                    String photoJson = response.getJSONObject("photo").toString();
+                                                    Photo avatar = gson.fromJson(photoJson, Photo.class);
+                                                    requestedUser.setAvatar(avatar);
+
+                                                    Api.getInstance(context).Post("user", new IJsonResponseHandler<JSONObject>() {
+                                                        @Override
+                                                        public void HandleResponse(JSONObject response) {
+                                                            System.out.println("Woohoo!");
+                                                            try {
+                                                                if (response.getString("id").length() > 0)
+                                                                    attemptLogin();
+                                                            } catch (JSONException e) {
+                                                                e.printStackTrace();
+                                                                showProgress(false);
+                                                            }
+                                                        }
+
+                                                        @Override
+                                                        public void HandleException(VolleyError error) {
+                                                            System.out.println("Ugh!");
+                                                            showProgress(false);
+                                                        }
+                                                    }, requestedUser);
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                    showProgress(false);
+                                                }
+                                            }
+
+                                            @Override
+                                            public void HandleException(VolleyError error) {
+                                                System.out.println("Damn!");
+                                                showProgress(false);
+                                            }
+                                        });
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                        showProgress(false);
+                                    }
+                                }
+
+                                @Override
+                                public void HandleException(VolleyError error) {
+                                    System.out.println("Fuck!");
+                                    showProgress(false);
+                                }
+                            }, avatar);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            showProgress(false);
+                        }
+                    }
+
+                    @Override
+                    public void HandleException(VolleyError error) {
+                        System.out.println("Shit!");
+                        showProgress(false);
+                    }
+                });
             }
         }
     }
@@ -239,38 +326,26 @@ public class RegisterActivity extends AppCompatActivity implements IJsonResponse
     private User BuildUserFromForm() {
         User user = new User();
 
-        user.set_firstName(_firstName.getText().toString());
-        user.set_middleInitial(_middleInitial.getText().toString());
-        user.set_lastName(_lastName.getText().toString());
-        user.set_username(_username.getText().toString());
-        user.set_email(_email.getText().toString());
-        user.set_password(_password.getText().toString());
-        user.set_avatar(_avatarBitmap);
+        user.setFirstName(_firstName.getText().toString());
+        user.setMiddleInitial(_middleInitial.getText().toString());
+        user.setLastName(_lastName.getText().toString());
+        user.setUsername(_username.getText().toString());
+        user.setEmail(_email.getText().toString());
+        user.setPassword(_password.getText().toString());
+        user.setAvatarImage(_avatarBitmap);
 
         return user;
     }
 
-    @Override
-    public void HandleResponse(JSONObject response) {
+    public void attemptLogin() {
         showProgress(false);
 
-        try {
-            String newUserId = response.getString("id");
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.putExtra("username", _username.getText().toString());
+        intent.putExtra("password", _password.getText().toString());
 
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.putExtra("username", _username.getText().toString());
-            intent.putExtra("password", _password.getText().toString());
+        startActivity(intent);
 
-            startActivity(intent);
-
-            finish();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void HandleException(VolleyError error) {
-        showProgress(false);
+        finish();
     }
 }

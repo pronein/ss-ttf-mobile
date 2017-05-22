@@ -1,11 +1,11 @@
 package com.schradersoft.timetofishmobile.core;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.Cache;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -20,6 +20,7 @@ import com.google.gson.GsonBuilder;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,9 @@ public class Api {
     private Context _context;
     private RequestQueue _requestQueue;
     private String _jwt;
-    private String _rootUri = "http://192.168.10.101:3000/api/";
+    //private String _rootUri = "http://192.168.137.240:3000/";
+    private String _rootUri = "http://192.168.1.108:3000/";
+    private String _rootApiUri = _rootUri + "api/";
 
     private Api(Context context) {
         _context = context;
@@ -45,9 +48,13 @@ public class Api {
         return _instance;
     }
 
+    public String getBaseUri() {return _rootUri;}
+
     public Boolean IsSignedIn() {
         return _jwt != null;
     }
+
+    public String getToken() {return _jwt;}
 
     public void Signout() {
         _jwt = null;
@@ -70,11 +77,11 @@ public class Api {
     }
 
     public void Get(String uri, IJsonResponseHandler handler, Map<String, String> headers) {
-        JsonObjectRequest req = BuildRequest(_rootUri + uri, Request.Method.GET, null, handler, headers);
+        JsonObjectRequest req = BuildRequest(_rootApiUri + uri, Request.Method.GET, null, handler, headers);
         _requestQueue.add(req);
     }
 
-    public void Post(String uri, IJsonResponseHandler handler, Object payload) throws JSONException {
+    public void Post(String uri, IJsonResponseHandler<JSONObject> handler, Object payload) throws JSONException {
         GsonBuilder gsonBuilder = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
                 .excludeFieldsWithoutExposeAnnotation();
@@ -82,7 +89,7 @@ public class Api {
 
         JSONObject jsonPayload = new JSONObject(gson.toJson(payload));
 
-        JsonObjectRequest req = BuildRequest(_rootUri + uri, Request.Method.POST, jsonPayload, handler, new HashMap<String, String>());
+        JsonObjectRequest req = BuildRequest(_rootApiUri + uri, Request.Method.POST, jsonPayload, handler, new HashMap<String, String>());
         _requestQueue.add(req);
     }
 
@@ -97,8 +104,37 @@ public class Api {
         return headers;
     }
 
+    public void BuildMultipartRequest(String uri, final Bitmap payload, final IJsonResponseHandler<JSONObject> handler) {
+        MultipartRequest req = new MultipartRequest(Request.Method.POST, _rootApiUri + uri, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                handler.HandleResponse(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                handler.HandleException(error);
+            }
+        }){
+            @Override
+            protected Map<String, DataPart> getByteData() {
+                Map<String, DataPart> params = new HashMap<>();
+
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                payload.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream);
+                byte[] data = byteArrayOutputStream.toByteArray();
+
+                params.put("photo", new DataPart("doesnt_matter.jpg", data, "image/jpeg"));
+
+                return params;
+            }
+        };
+
+        _requestQueue.add(req);
+    }
+
     private JsonObjectRequest BuildRequest(String uri, int method, JSONObject payload,
-                                           final IJsonResponseHandler handler,
+                                           final IJsonResponseHandler<JSONObject> handler,
                                            final Map<String, String> headers) {
 
         JsonObjectRequest request = new JsonObjectRequest(method, uri, payload,

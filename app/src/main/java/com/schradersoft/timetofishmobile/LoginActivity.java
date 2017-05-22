@@ -25,7 +25,7 @@ import org.json.JSONObject;
 /**
  * A login screen that offers login via username/password.
  */
-public class LoginActivity extends AppCompatActivity implements IJsonResponseHandler {
+public class LoginActivity extends AppCompatActivity implements IJsonResponseHandler<JSONObject> {
 
     // UI references.
     private EditText mUsernameView;
